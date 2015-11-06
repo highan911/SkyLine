@@ -9,6 +9,7 @@ class Unit;
 class Point{
 public:
     int ID;
+	int name;
     double* Data;
     int Layer;
     vector<Point*> Parents;
@@ -22,14 +23,21 @@ public:
     
     bool operator==(Point &a)
     {
+		
         return ID==a.ID;
     }
 };
 
-bool SortByID(  Point*v1,  Point *v2)
+bool SortByIDDesc(  Point*v1,  Point *v2)
 {
     return v1->ID > v2->ID;
 }
+
+bool SortByIDAsc(  Point*v1,  Point *v2)
+{
+    return v1->ID < v2->ID;
+}
+
 
 class Unit{
 public:
@@ -40,7 +48,8 @@ public:
     Unit(Point* host){
         Hosts.push_back(host);
         Points = host->Parents;
-        std::sort(Points.begin(),Points.end(),SortByID);
+		Points.push_back(host);
+        std::sort(Points.begin(),Points.end(),SortByIDDesc);
         Count = Points.size();
     }
     
@@ -49,7 +58,10 @@ public:
         vector<Point*>::iterator it1  = u1->Points.begin();
         vector<Point*>::iterator it2  = u2->Points.begin();
         
-        while(it1!= u1->Points.end() && it1 != u2->Points.end()){
+		Hosts = u1->Hosts;
+		Hosts.insert(Hosts.end(),u2->Hosts.begin(),u2->Hosts.end());
+		std::sort(Hosts.begin(),Hosts.end(),SortByIDAsc);
+        while(it1!= u1->Points.end() && it2 != u2->Points.end()){
             
             
             if((*it1)->ID != (*it2)->ID){
@@ -100,15 +112,41 @@ public:
     
     void printUnitGroup(){
         
-        cout<<" print UnitGroup £∫";
-        for(vector<Point*>::iterator it1  = Points.begin(); it1 != Points.end(); it1 ++)  {
+        cout<<" print UnitGroup:";
+        for(vector<Point*>::iterator it1  = Hosts.begin(); it1 != Hosts.end(); it1 ++)  {
             
-            cout<< (*it1)->ID<<" ";
+            cout<<"Hosts name = "<<(*it1)->name<<" ";
         }
         cout<<endl;
     }
-};
 
+	bool equal(Unit *a)
+    {
+		bool flag = true;
+		 flag = Count==a->Count;
+		 if(flag){
+		 
+			 flag = PointInUnit(a->Points);
+		 }
+
+		 return flag;
+    }
+};e
+
+bool SortByCount(  Unit*v1,  Unit *v2)
+{
+	bool flag = true;
+	if(v1->Count == v2->Count)
+	{
+		Point* point1 = v1->Hosts.front();
+		Point* point2 = v2->Hosts.front();
+		flag = point1->ID>point2->ID;
+	}else{
+	 
+		flag = v1->Count > v2->Count;
+	}
+	return flag;
+}
 
 
 class Node{
@@ -371,47 +409,60 @@ void UWiseAddMethod(vector<Point*> AllPoint,int k ){
     
     vector<Unit*> unitGroups;
     vector<Unit*> unitGroupsHighter;
-    
+    //preprocessing     O(k)
     for(vector<Point*>::iterator it  = AllPoint.begin(); it != AllPoint.end(); it ++)  {
         
-        if((*it)->Parents.size() == k){
-            cout<<" G-Skyline £∫";
+        if((*it)->Parents.size() == k - 1){
+            cout<<" G-Skyline ";
+			cout<< (*it)->name<<" ";
             for(vector<Point*>::iterator it1  = (*it)->Parents.begin(); it1 != (*it)->Parents.end(); it1 ++)  {
                 
-                cout<< (*it1)->ID<<" ";
+                cout<< (*it1)->name<<" ";
             }
             cout<<endl;
-        }
-        
-        if((*it)->Parents.size() < k){
+        }else if((*it)->Parents.size() < k - 1){
             Unit* unitGroup = new Unit((*it));
             unitGroups.push_back(unitGroup);
         }
     }
+	// sort unitGroup by count desc O(klgk)
+	std::sort(unitGroups.begin(),unitGroups.end(),SortByCount);
     bool flag = true;
-    
+    unitGroupsHighter = unitGroups;
     while(flag){
         vector<Unit*> temp;
-        for(vector<Unit*>::iterator it  = unitGroups.begin(); it != unitGroups.end(); it ++){
-            for(vector<Unit*>::iterator it2  = unitGroups.begin(); it2 != unitGroups.end(); it2 ++)  {
+        for(vector<Unit*>::iterator it  = unitGroupsHighter.begin(); it != unitGroupsHighter.end(); it ++){
+
+			Point* hostPoint = (*it)->Hosts.front();
+			Unit* hostUnit = new Unit(hostPoint);
+			vector<Unit*>::iterator it2  = unitGroups.begin();
+
+			// O(k)
+			for(; it2 != unitGroups.end(); it2 ++)  {
+
+				if((*it2)->equal(hostUnit)){
+					it2++;
+					break;
+				}
+			}
+			for(; it2 != unitGroups.end(); it2 ++)  {
                 
+
                 Unit* u1 = (*it);
                 Unit* u2 = (*it2);
-                
-                if(u1->Count + u2->Count >= k){
+				if(!u1->PointInUnit(u2->Hosts)){
                     
+					Unit* bigUnitGroup = new Unit(u1,u2);
                     
-                    Unit* bigUnitGroup = new Unit(u1,u2);
-                    
-                    if(bigUnitGroup->Count == k)
-                        bigUnitGroup->printUnitGroup();
-                    else if(bigUnitGroup->Count <k)
-                        temp.push_back(bigUnitGroup);
-                }
+					if(bigUnitGroup->Count == k)
+						bigUnitGroup->printUnitGroup();
+					else if(bigUnitGroup->Count <k)
+						temp.push_back(bigUnitGroup);
+				}
             }
             
         }
-        flag = temp.empty();
+		flag = !temp.empty();
         unitGroupsHighter = temp;
     }
 }
@@ -455,33 +506,40 @@ int main()
      */
     Point* p1 = new Point();
     p1->ID = 1; 
+	p1->name = 1;
     p1->Layer = 1;
     
     Point* p2 = new Point();
     p2->ID = 2; 
+	p2->name = 6;
     p2->Layer = 1;
     
     Point* p3 = new Point();
     p3->ID = 3; 
+	p3->name = 11;
     p3->Layer = 1;
     
     Point* p4 = new Point();
     p4->ID = 4; 
+	p4->name = 3;
     p4->Layer = 2;
     p4->Parents.push_back(p2);
     
     Point* p5 = new Point();
     p5->ID = 5; 
     p5->Layer = 2;
+	p5->name = 8;
     p5->Parents.push_back(p3);
     
     Point* p6 = new Point();
     p6->ID = 6; 
     p6->Layer = 2;
+	p6->name = 10;
     p6->Parents.push_back(p3);
     
     Point* p7 = new Point();
     p7->ID = 7; 
+	p7->name=2;
     p7->Layer = 3;
     p7->Parents.push_back(p4);
     p7->Parents.push_back(p2);
@@ -491,6 +549,7 @@ int main()
     Point* p8 = new Point();
     p8->ID = 8; 
     p8->Layer = 3;
+	p8->name = 5;
     p8->Parents.push_back(p2);
     p8->Parents.push_back(p3);
     p8->Parents.push_back(p5);
@@ -498,12 +557,14 @@ int main()
     Point* p9 = new Point();
     p9->ID = 9; 
     p9->Layer = 3;
+	p9->name = 9;
     p9->Parents.push_back(p6);
     p9->Parents.push_back(p3);
     
     Point* p10 = new Point();
     p10->ID = 10; 
     p10->Layer = 4;
+	p10->name = 4;
     p10->Parents.push_back(p9);
     p10->Parents.push_back(p8);
     p10->Parents.push_back(p6);
@@ -513,6 +574,7 @@ int main()
     
     Point* p11 = new Point();
     p11->ID = 11; 
+	p11->name = 7;
     p11->Layer = 4;
     p11->Parents.push_back(p9);
     p11->Parents.push_back(p6);
@@ -531,7 +593,7 @@ int main()
     testPonts.push_back(p9);
     testPonts.push_back(p10);
     testPonts.push_back(p11);
-    //UWiseAddMethod(testPonts,2);
+    UWiseAddMethod(testPonts,4);
     return 0;
     
 }
