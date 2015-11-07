@@ -15,13 +15,18 @@ public:
     
     Point(int id, double* data){
         ID = id;
+		name = id;
         Data = data;
     }
     
     Point(){};
     
-  
+	~Point(){
+	
+		delete Data;
+	}
 };
+
 
 /***
 **	desc: 方法用于对于vector中的Point根据ID进行降序排列

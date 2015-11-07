@@ -1,7 +1,11 @@
-#include <iostream>
+﻿#include <iostream>
 #include <fstream>
 #include <vector>
 #include<algorithm>
+#include <string>
+#include "Windows.h"
+#include<time.h>
+
 
 #include "Point.h"
 #include "Unit.h"
@@ -17,7 +21,7 @@ class Node;
 
 class Skylines;
 
-
+int MAX_LAYER = 2;
 
 
 void UWiseAddMethod(vector<Point*> AllPoint,int k ){
@@ -25,17 +29,19 @@ void UWiseAddMethod(vector<Point*> AllPoint,int k ){
     
     vector<Unit*> unitGroups;
     vector<Unit*> unitGroupsHighter;
+	int totalCountUnitGroup = 0;
     //preprocessing     O(k)
     for(vector<Point*>::iterator it  = AllPoint.begin(); it != AllPoint.end(); it ++)  {
         
         if((*it)->Parents.size() == k - 1){
-            cout<<" G-Skyline ";
+          /*  cout<<" G-Skyline ";
 			cout<< (*it)->name<<" ";
             for(vector<Point*>::iterator it1  = (*it)->Parents.begin(); it1 != (*it)->Parents.end(); it1 ++)  {
                 
                 cout<< (*it1)->name<<" ";
             }
-            cout<<endl;
+            cout<<endl;*/
+			totalCountUnitGroup++;
         }else if((*it)->Parents.size() < k - 1){
             Unit* unitGroup = new Unit((*it));
             unitGroups.push_back(unitGroup);
@@ -45,6 +51,7 @@ void UWiseAddMethod(vector<Point*> AllPoint,int k ){
 	std::sort(unitGroups.begin(),unitGroups.end(),SortByCount);
     bool flag = true;
     unitGroupsHighter = unitGroups;
+	int iteratorCount  = 0;
     while(flag){
         vector<Unit*> temp;
         for(vector<Unit*>::iterator it  = unitGroupsHighter.begin(); it != unitGroupsHighter.end(); it ++){
@@ -71,7 +78,8 @@ void UWiseAddMethod(vector<Point*> AllPoint,int k ){
 					Unit* bigUnitGroup = new Unit(u1,u2);
                     
 					if(bigUnitGroup->Count == k)
-						bigUnitGroup->printUnitGroup();
+						/*bigUnitGroup->printUnitGroup();*/
+						totalCountUnitGroup++;
 					else if(bigUnitGroup->Count <k)
 						temp.push_back(bigUnitGroup);
 				}
@@ -80,7 +88,67 @@ void UWiseAddMethod(vector<Point*> AllPoint,int k ){
         }
 		flag = !temp.empty();
         unitGroupsHighter = temp;
+		iteratorCount  ++;
+		//cout<<"temp size:"<<temp.size()<<" .iterator count"<< iteratorCount<<endl;
     }
+	cout<<"total  G-Skyline :" <<totalCountUnitGroup<<endl;
+}
+
+vector<Point*> getPoints(int Dim ,string PATH){
+
+	int SIZE = 10000;
+	
+	
+
+	double** AllData = new double*[SIZE];
+	
+	vector<Point*> AllPoint;
+
+	//int names[11];
+	//names[0] = 1;
+	//names[1] = 6;
+	//names[2] = 3;
+	//names[3] = 11;
+	//names[4] = 8;
+	//names[5] = 2;
+	//names[6] = 5;
+	//names[7] = 10;
+	//names[8] = 9;
+	//names[9] = 4;
+	//names[10] = 7;
+
+	ifstream f;
+	f.open(PATH,ios::in);
+	int index = 0;
+	while (! f.eof() ) {
+		AllData[index] = new double[Dim];
+		for (int j = 0; j < Dim; j++)
+		{
+			f>>AllData[index][j];
+		}
+		index++;
+	} 
+
+	f.close();
+	
+	double coor1[] = {-500.0,-500.0,-5.0,-5.0,-5.0,-5.0,-5.0,-5.0};
+	double coor2[] = {500.0,500.0,5.0,5.0,5.0,5.0,5.0,5.0};
+
+	Skylines skylines = Skylines(Dim, MAX_LAYER);
+
+	for (int i = 0; i < index; i++)
+	{
+		Point* point = new Point(i,AllData[i]);
+		//point->name = names[i];
+		if(skylines.Insert(point)){
+			AllPoint.push_back(point);
+		}
+	}
+
+
+	 
+	
+	return AllPoint;
 }
 
 vector<Point*> getTestPoint(){
@@ -182,7 +250,28 @@ vector<Point*> getTestPoint(){
 int main()
 {
 
-    UWiseAddMethod(getTestPoint(),4);
+	string prePath = "../../datasets/";
+	string path;
+	int dim;
+	cout<<"输入文件名:"<<endl;
+	cin>>path;
+	path = prePath.append(path);
+	cout<<"输入维度:"<<endl;
+	cin>>dim;
+	cout<<"输入k:"<<endl;
+	cin>>MAX_LAYER;
+	clock_t start,finish;
+	double totalTime;
+	start = clock();
+	vector<Point*> points = getPoints(dim,path);
+	finish = clock();
+	totalTime = (double)(finish-start)/1000.0;
+	cout<<"the prgram has create the skyline. the points count is "<<points.size()<<endl;
+	cout<<" this method cost " << totalTime <<"s"<<endl;
+	UWiseAddMethod(points,MAX_LAYER);
+	start = clock();
+	totalTime = (double)(start-finish)/1000.0;
+	cout<<" this method cost " << totalTime <<"s"<<endl;
     return 0;
     
 }

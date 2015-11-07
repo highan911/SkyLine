@@ -10,14 +10,17 @@ public:
     Node** SubNodes;
     Point* Data;
     int Count;
-    
+    ~Node(){
+		delete SubNodes;
+		delete Data;
+	}
     Node(int dim, double* coor1, double* coor2){
         Dim=dim;
         Coor1=coor1;
         Coor2=coor2;
         Count=0;
     }
-    
+	
     int GetSubNode(bool* judge){
         int ind=0;
         for (int i = 0; i < Dim; i++)
