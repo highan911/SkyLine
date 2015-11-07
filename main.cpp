@@ -263,11 +263,13 @@ int main()
 	clock_t start,finish;
 	double totalTime;
 	start = clock();
+	//构建SkyLine和DSG图
 	vector<Point*> points = getPoints(dim,path);
 	finish = clock();
 	totalTime = (double)(finish-start)/1000.0;
 	cout<<"the prgram has create the skyline. the points count is "<<points.size()<<endl;
 	cout<<" this method cost " << totalTime <<"s"<<endl;
+	//使用UWise+方法
 	UWiseAddMethod(points,MAX_LAYER);
 	start = clock();
 	totalTime = (double)(start-finish)/1000.0;
