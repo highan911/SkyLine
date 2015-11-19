@@ -97,8 +97,6 @@ void UWiseAddMethod(vector<Point*> AllPoint,int k ){
 vector<Point*> getPoints(int Dim ,string PATH){
 
 	int SIZE = 10000;
-	
-	
 
 	double** AllData = new double*[SIZE];
 	
@@ -131,9 +129,6 @@ vector<Point*> getPoints(int Dim ,string PATH){
 
 	f.close();
 	
-	double coor1[] = {-500.0,-500.0,-5.0,-5.0,-5.0,-5.0,-5.0,-5.0};
-	double coor2[] = {500.0,500.0,5.0,5.0,5.0,5.0,5.0,5.0};
-
 	Skylines skylines = Skylines(Dim, MAX_LAYER);
 
 	for (int i = 0; i < index; i++)
@@ -145,12 +140,86 @@ vector<Point*> getPoints(int Dim ,string PATH){
 		}
 	}
 
-
-	 
-	
 	return AllPoint;
 }
 
+
+vector<Point*> getPoints_T(int Dim ,string PATH){
+
+	int SIZE = 10000;
+
+	double** AllData = new double*[SIZE];
+	
+	vector<Point*> AllPoint;
+
+	ifstream f;
+	f.open(PATH,ios::in);
+	int index = 0;
+	while (! f.eof() ) {
+		AllData[index] = new double[Dim];
+		for (int j = 0; j < Dim; j++)
+		{
+			f>>AllData[index][j];
+		}
+		index++;
+	} 
+
+	f.close();
+	
+	double coor1[] = {-500.0,-500.0,-5.0,-5.0,-5.0,-5.0,-5.0,-5.0};
+	double coor2[] = {500.0,500.0,5.0,5.0,5.0,5.0,5.0,5.0};
+
+	Skylines_T skylines = Skylines_T(Dim, MAX_LAYER, coor1, coor2);
+
+	for (int i = 0; i < index; i++)
+	{
+		Point* point = new Point(i,AllData[i]);
+		if(skylines.Insert(point)){
+			AllPoint.push_back(point);
+		}
+	}
+
+	return AllPoint;
+}
+
+
+vector<Point*> getPoints_R(int Dim ,string PATH){
+
+	int SIZE = 10000;
+
+	double** AllData = new double*[SIZE];
+	
+	vector<Point*> AllPoint;
+
+	ifstream f;
+	f.open(PATH,ios::in);
+	int index = 0;
+	while (! f.eof() ) {
+		AllData[index] = new double[Dim];
+		for (int j = 0; j < Dim; j++)
+		{
+			f>>AllData[index][j];
+		}
+		index++;
+	} 
+
+	f.close();
+	
+	double coor1[] = {-500.0,-500.0,-5.0,-5.0,-5.0,-5.0,-5.0,-5.0};
+	double coor2[] = {500.0,500.0,5.0,5.0,5.0,5.0,5.0,5.0};
+
+	Skylines_R skylines = Skylines_R(Dim, MAX_LAYER, coor1, coor2);
+
+	for (int i = 0; i < index; i++)
+	{
+		Point* point = new Point(i, AllData[i], Dim, coor1);
+		if(skylines.Insert(point)){
+			AllPoint.push_back(point);
+		}
+	}
+
+	return AllPoint;
+}
 vector<Point*> getTestPoint(){
 
 	
@@ -269,6 +338,25 @@ int main()
 	totalTime = (double)(finish-start)/1000.0;
 	cout<<"the prgram has create the skyline. the points count is "<<points.size()<<endl;
 	cout<<" this method cost " << totalTime <<"s"<<endl;
+	
+	//通过多叉树构建SkyLine和DSG图
+	start = clock();
+	points = getPoints_T(dim,path);
+	finish = clock();
+	totalTime = (double)(finish-start)/1000.0;
+	cout<<"the prgram has create the skyline by the multi-tree method."<<endl;
+	cout<<"the points count is "<<points.size()<<endl;
+	cout<<" this method cost " << totalTime <<"s"<<endl;
+
+	//通过R树构建SkyLine和DSG图
+	start = clock();
+	points = getPoints_R(dim,path);
+	finish = clock();
+	totalTime = (double)(finish-start)/1000.0;
+	cout<<"the prgram has create the skyline by the R-tree method."<<endl<<" the points count is "<<points.size()<<endl;
+	cout<<" this method cost " << totalTime <<"s"<<endl;
+
+	
 	//使用UWise+方法
 	UWiseAddMethod(points,MAX_LAYER);
 	start = clock();

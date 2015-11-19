@@ -128,4 +128,112 @@ public:
 
 };
 
+class Skylines_T{
+public:
+	int Dim;
+	int MAX_LAYER;
+	double* Coor1;
+	double* Coor2;
+	vector<Node_T> Layers;
+
+	Skylines_T(int dim, int max_layer, double* coor1, double* coor2){
+		Dim=dim;
+		MAX_LAYER = max_layer;
+		Coor1=coor1;
+		Coor2=coor2;
+	}
+
+	bool Insert(Point* point){
+		if (Layers.size() > 0)
+		{
+			if(MAX_LAYER>0 && Layers.size()>=MAX_LAYER){
+				if(CanDominate(Layers[MAX_LAYER - 1], point)) return false;
+			}
+
+			for (int i = 0; i < Layers.size(); i++)
+			{
+				bool found = Layers[i].Query_GetParents(Coor1, point);
+				if(!found){
+					point->Layer = i;
+					Layers[point->Layer].Insert(point);
+					return true;
+				}
+			}
+
+		}
+
+		Layers.push_back(Node_T(Dim, Coor1, Coor2));
+		point->Layer = Layers.size() - 1;
+		Layers[point->Layer].Insert(point);
+
+		return true;
+	}
+
+	bool CanDominate(Node_T layer, Point* data){
+		return layer.Query_Bool(Coor1, data->Data);
+	}
+
+};
+
+class Skylines_R{
+public:
+	int Dim;
+	int MAX_LAYER;
+	double* Coor1;
+	double* Coor2;
+	vector<Node_R*> Layers;
+
+	Skylines_R(int dim, int max_layer, double* coor1, double* coor2){
+		Dim=dim;
+		MAX_LAYER = max_layer;
+		Coor1=coor1;
+		Coor2=coor2;
+	}
+
+	bool Insert(Point* point){
+
+		if (Layers.size() > 0)
+		{
+			
+			if(MAX_LAYER>0 && Layers.size()>=MAX_LAYER){
+
+				if(Layers[MAX_LAYER - 1]->Root==false){
+					Layers[MAX_LAYER - 1] = Layers[MAX_LAYER - 1]->Parent;
+				}
+
+				if(CanDominate(Layers[MAX_LAYER - 1], point)) {
+					return false;
+				}
+			}
+
+			for (int i = 0; i < Layers.size(); i++)
+			{
+				if(Layers[i]->Root==false){
+					Layers[i] = Layers[i]->Parent;
+				}
+
+				bool found = Layers[i]->Query_GetParents(Coor1, point);
+				if(!found){
+					point->Layer = i;
+					Layers[i]->Insert(point);
+					return true;
+				}
+			}
+		}
+
+
+		Layers.push_back(new Node_R(Dim, NULL, true, Coor1));
+		point->Layer = Layers.size() - 1;
+		Layers[point->Layer]->Insert(point);
+
+		return true;
+	}
+
+	bool CanDominate(Node_R* layer, Point* data){
+		return layer->Query_Bool(Coor1, data);
+	}
+
+};
+
+
 #endif
