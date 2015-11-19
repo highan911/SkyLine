@@ -153,7 +153,18 @@ vector<Point*> getPoints(int Dim ,string PATH){
 vector<Point*> getPoints_T(int Dim ,string PATH){
 
 	int SIZE = 10000;
-
+	int names[11];
+	names[0] = 1;
+	names[1] = 6;
+	names[2] = 3;
+	names[3] = 11;
+	names[4] = 8;
+	names[5] = 2;
+	names[6] = 5;
+	names[7] = 10;
+	names[8] = 9;
+	names[9] = 4;
+	names[10] = 7;
 	double** AllData = new double*[SIZE];
 	
 	vector<Point*> AllPoint;
@@ -180,6 +191,7 @@ vector<Point*> getPoints_T(int Dim ,string PATH){
 	for (int i = 0; i < index; i++)
 	{
 		Point* point = new Point(i,AllData[i]);
+		point->name = names[i];
 		if(skylines.Insert(point)){
 			AllPoint.push_back(point);
 		}
@@ -192,7 +204,18 @@ vector<Point*> getPoints_T(int Dim ,string PATH){
 vector<Point*> getPoints_R(int Dim ,string PATH){
 
 	int SIZE = 10000;
-
+	int names[11];
+	names[0] = 1;
+	names[1] = 6;
+	names[2] = 3;
+	names[3] = 11;
+	names[4] = 8;
+	names[5] = 2;
+	names[6] = 5;
+	names[7] = 10;
+	names[8] = 9;
+	names[9] = 4;
+	names[10] = 7;
 	double** AllData = new double*[SIZE];
 	
 	vector<Point*> AllPoint;
@@ -219,6 +242,7 @@ vector<Point*> getPoints_R(int Dim ,string PATH){
 	for (int i = 0; i < index; i++)
 	{
 		Point* point = new Point(i, AllData[i], Dim, coor1);
+		point->name = names[i];
 		if(skylines.Insert(point)){
 			AllPoint.push_back(point);
 		}
