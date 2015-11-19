@@ -24,8 +24,9 @@ class Skylines;
 int MAX_LAYER = 2;
 
 
-void UWiseAddMethod(vector<Point*> AllPoint,int k ){
+vector<Unit*> UWiseAddMethod(vector<Point*> AllPoint,int k ){
     
+	vector<Unit*> resultsUnit;
     
     vector<Unit*> unitGroups;
     vector<Unit*> unitGroupsHighter;
@@ -34,13 +35,14 @@ void UWiseAddMethod(vector<Point*> AllPoint,int k ){
     for(vector<Point*>::iterator it  = AllPoint.begin(); it != AllPoint.end(); it ++)  {
         
         if((*it)->Parents.size() == k - 1){
-          /*  cout<<" G-Skyline ";
+            /*cout<<" G-Skyline ";
 			cout<< (*it)->name<<" ";
             for(vector<Point*>::iterator it1  = (*it)->Parents.begin(); it1 != (*it)->Parents.end(); it1 ++)  {
                 
                 cout<< (*it1)->name<<" ";
             }
             cout<<endl;*/
+			resultsUnit.push_back(new Unit(*it));
 			totalCountUnitGroup++;
         }else if((*it)->Parents.size() < k - 1){
             Unit* unitGroup = new Unit((*it));
@@ -77,9 +79,11 @@ void UWiseAddMethod(vector<Point*> AllPoint,int k ){
                     
 					Unit* bigUnitGroup = new Unit(u1,u2);
                     
-					if(bigUnitGroup->Count == k)
-						/*bigUnitGroup->printUnitGroup();*/
+					if(bigUnitGroup->Count == k){
+						//bigUnitGroup->printUnitGroup();
 						totalCountUnitGroup++;
+						resultsUnit.push_back(bigUnitGroup);
+					}
 					else if(bigUnitGroup->Count <k)
 						temp.push_back(bigUnitGroup);
 				}
@@ -92,6 +96,8 @@ void UWiseAddMethod(vector<Point*> AllPoint,int k ){
 		//cout<<"temp size:"<<temp.size()<<" .iterator count"<< iteratorCount<<endl;
     }
 	cout<<"total  G-Skyline :" <<totalCountUnitGroup<<endl;
+
+	return resultsUnit;
 }
 
 vector<Point*> getPoints(int Dim ,string PATH){
@@ -102,18 +108,18 @@ vector<Point*> getPoints(int Dim ,string PATH){
 	
 	vector<Point*> AllPoint;
 
-	//int names[11];
-	//names[0] = 1;
-	//names[1] = 6;
-	//names[2] = 3;
-	//names[3] = 11;
-	//names[4] = 8;
-	//names[5] = 2;
-	//names[6] = 5;
-	//names[7] = 10;
-	//names[8] = 9;
-	//names[9] = 4;
-	//names[10] = 7;
+	int names[11];
+	names[0] = 1;
+	names[1] = 6;
+	names[2] = 3;
+	names[3] = 11;
+	names[4] = 8;
+	names[5] = 2;
+	names[6] = 5;
+	names[7] = 10;
+	names[8] = 9;
+	names[9] = 4;
+	names[10] = 7;
 
 	ifstream f;
 	f.open(PATH,ios::in);
@@ -134,7 +140,7 @@ vector<Point*> getPoints(int Dim ,string PATH){
 	for (int i = 0; i < index; i++)
 	{
 		Point* point = new Point(i,AllData[i]);
-		//point->name = names[i];
+		point->name = names[i];
 		if(skylines.Insert(point)){
 			AllPoint.push_back(point);
 		}
@@ -322,6 +328,63 @@ int main()
 	string prePath = "../../datasets/";
 	string path;
 	int dim;
+
+	//run the correct program
+	dim = 2;
+	MAX_LAYER = 4;
+	cout<<"correctness checking"<<endl;
+	path = prePath.append("test_2.txt");
+
+	clock_t start,finish;
+	double totalTime;
+	start = clock();
+	//构建SkyLine和DSG图
+	vector<Point*> points = getPoints(dim,path);
+	finish = clock();
+	totalTime = (double)(finish-start)/1000.0;
+	cout<<"the prgram has create the skyline."<<endl;
+	cout<<"the points count is "<<points.size()<<endl;
+
+	
+	//使用UWise+方法
+	vector<Unit*> unitGroup = UWiseAddMethod(points,MAX_LAYER);
+	
+	 for(vector<Unit*>::iterator it  = unitGroup.begin(); it != unitGroup.end(); it ++){
+
+		 (*it)->printUnitGroup();
+	 }
+	 
+	//通过多叉树构建SkyLine和DSG图
+	
+	points = getPoints_T(dim,path);
+	
+	totalTime = (double)(finish-start)/1000.0;
+	cout<<"the prgram has create the skyline by the multi-tree method."<<endl;
+	cout<<"the points count is "<<points.size()<<endl;
+	 unitGroup = UWiseAddMethod(points,MAX_LAYER);
+
+	 for(vector<Unit*>::iterator it  = unitGroup.begin(); it != unitGroup.end(); it ++){
+
+		 (*it)->printUnitGroup();
+	 }
+
+	//通过R树构建SkyLine和DSG图
+	points = getPoints_R(dim,path);
+	totalTime = (double)(finish-start)/1000.0;
+	cout<<"the prgram has create the skyline by the R-tree method."<<endl;
+	cout<<"the points count is "<<points.size()<<endl;
+	
+
+	 unitGroup = UWiseAddMethod(points,MAX_LAYER);
+
+	 for(vector<Unit*>::iterator it  = unitGroup.begin(); it != unitGroup.end(); it ++){
+
+		 (*it)->printUnitGroup();
+	 }
+	
+	
+	// run the normal program
+
 	cout<<"输入文件名:"<<endl;
 	cin>>path;
 	path = prePath.append(path);
@@ -329,11 +392,11 @@ int main()
 	cin>>dim;
 	cout<<"输入k:"<<endl;
 	cin>>MAX_LAYER;
-	clock_t start,finish;
-	double totalTime;
+
+
 	start = clock();
 	//构建SkyLine和DSG图
-	vector<Point*> points = getPoints(dim,path);
+	points = getPoints(dim,path);
 	finish = clock();
 	totalTime = (double)(finish-start)/1000.0;
 	cout<<"the prgram has create the skyline. the points count is "<<points.size()<<endl;
